@@ -71,8 +71,10 @@
 		</div>
 	</div>
 	<div class='row'  v-show='currentstep>=4'>
-		<div class='rowtitle'>Scanner</div>
-		<div class='scannerscreen'>Camera Viewport</div>
+		<div class='rowtitle'>Scanner
+
+		</div>
+		<div class='scannerscreen'><scanner></scanner></div>
 		<div class='barcodelist'>List</div>
 		<div class='button'>btns</div>
 	</div>
@@ -81,13 +83,13 @@
 </template>
 <script>
 
-import kogrid from './kogrid.vue';
-
+// import kogrid from './kogrid.vue';
+import scanner from "./scanner.vue";
 export default {
     name: 'frontpage',
 	data : function() {
 		return {
-			currentstep:1,
+			currentstep:4,
 			user:{username:'Albert',password:'wwww'},
 			operation:'',
 			routelist:['a','b','c','d'],
@@ -169,7 +171,7 @@ export default {
 		}
 	},
 	components:{
-
+		scanner
 	}
 };
 </script>
