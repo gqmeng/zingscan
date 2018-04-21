@@ -1,8 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import widgets from './modules/widgets'
-import patients from './modules/patients'
-import layouts from './modules/layouts'
+
 import VuexPersistence from 'vuex-persist'
 
 Vue.use(Vuex)
@@ -17,11 +15,6 @@ const vuexLocal = new VuexPersistence ({
 const store = new Vuex.Store({
   strict: process.env.NODE_ENV !== 'production',
   plugins: [vuexLocal.plugin],
-  modules: {
-    widgets,
-    patients,
-    layouts
-  },
   state:{
       init:{},
       debugEnabled:true,
@@ -35,11 +28,15 @@ const store = new Vuex.Store({
       maxgroupinuse:6,
       patientData:[],
       today:0,
-      screenname:'Patient List'
+      screenname:'Patient List',
+      currentuser:''
     },
   mutations: {
     settoday(state,timestamp){
       state.today=timestamp
+    },
+    setcurrentuser(state,userid){
+      state.currentuser = userid
     },
     init(state, obj){
       state.init=obj;
@@ -199,6 +196,9 @@ const store = new Vuex.Store({
   getters: {
     getScreenname:state=>{
       return state.screenname
+    },
+    getcurrentuser:state=>{
+      return state.currentuser
     },
     gettoday:state=>{
       return state.today

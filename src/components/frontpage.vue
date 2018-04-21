@@ -8,6 +8,14 @@
 		<div class='loginpanel' v-if='currentstep==0'>
 			<div class='row'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
+				<label>Server URL</label>
+			</div>
+			<div class='col-md-8 col-sm-8 col-xs-8'>
+				<input type='text' v-model='serverurl' placeholder='Please Enter server url'></input>
+			</div>
+		</div>
+			<div class='row'>
+			<div class='col-md-4 col-sm-4 col-xs-4'>
 				<label>USERNAME</label>
 			</div>
 			<div class='col-md-8 col-sm-8 col-xs-8'>
@@ -28,6 +36,22 @@
 			</div>
 			<div class='col-md-8 col-sm-8 col-xs-8'>
 				<button class='primarybtn' :disabled='!validuser' @click='loginclick'>LOG IN</button>
+			</div>
+		</div>
+		<!-- <div class='row' v-if='testmode'>
+			<div class='col-md-4 col-sm-4 col-xs-4'>
+					<label>REQUEST</label>
+			</div>
+			<div class='col-md-8 col-sm-8 col-xs-8'>
+				<p>{{requestbody}}</p>
+			</div>
+		</div> -->
+		<div class='row' v-if='testmode'>
+			<div class='col-md-4 col-sm-4 col-xs-4'>
+					<label>RESPONSE</label>
+			</div>
+			<div class='col-md-8 col-sm-8 col-xs-8'>
+				<p>{{responsebody}}</p>
 			</div>
 		</div>
 		</div>
@@ -74,7 +98,7 @@
 		<div class='rowtitle'>Scanner
 
 		</div>
-		<div class='scannerscreen'><scanner></scanner></div>
+		<!-- <div class='scannerscreen'><scanner></scanner></div> -->
 		<div class='barcodelist'>List</div>
 		<div class='button'>btns</div>
 	</div>
@@ -84,13 +108,18 @@
 <script>
 
 // import kogrid from './kogrid.vue';
-import scanner from "./scanner.vue";
+// import scanner from "./scanner.vue";
 export default {
     name: 'frontpage',
 	data : function() {
 		return {
-			currentstep:4,
-			user:{username:'Albert',password:'wwww'},
+			testmode:true,
+			currentstep:0,
+			serverurl:'http://localhost/zing2',
+			filebase:'/m/mjsonlogin.php',
+			user:{username:'UserA1',password:'AAAA'},
+			requestbody:'request',
+			responsebody:'response',
 			operation:'',
 			routelist:['a','b','c','d'],
 			selectedroute:'',
@@ -125,8 +154,12 @@ export default {
 		}
 	},
 	computed : {
+		cUser: function(){
+			return this.$store.getters.getcurrentuser
+		},
 		isLoggedIn:function(){
-			return this.user.username!=''
+
+			return this.cUser!=''
 		},
 		validuser:function(){
 			return this.user.username!=''&&this.user.password!=''
@@ -149,7 +182,33 @@ export default {
 				e.preventDefault();
 		},
 		loginclick:function(){
-			this.currentstep++;
+
+			var self=this
+			var data ={}
+			data.username=this.user.username
+			data.password=this.user.password
+			data.device ='A'
+			data.syncflag='1'
+			var params = new URLSearchParams();
+			for(var key in data){
+				params.append(key, data[key]);
+			}
+			var url = this.serverurl+this.filebase
+			this.$http({
+				method: 'POST',
+				url: url,
+				headers: {'Content-type': 'application/x-www-form-urlencoded',
+									'Accept':'application/json'
+								},
+				data:params
+			}) .then(function(response) {
+				self.responsebody=JSON.stringify(response)
+				console.log(response)
+				self.currentstep++;
+			}) .catch(function(error){
+				self.responsebody=JSON.stringify(error)
+				console.log(error)
+			});
 			this.operation=''
 		},
 		logout:function() {
@@ -171,7 +230,7 @@ export default {
 		}
 	},
 	components:{
-		scanner
+		// scanner
 	}
 };
 </script>
@@ -182,7 +241,7 @@ export default {
 	padding: 10px;
 }
 .rowtitle {
-	font-size: 24px;
+	font-size: 20pt;
 	font-weight: 600;
 	background-color:#e3e3e3;
 	padding:5px 15px;
@@ -190,7 +249,7 @@ export default {
 .inlinebtn {
 	display:inline-block;
 	float:right;
-	font-size:16px;
+	font-size:20pt;
 	border:1px solid #666666;
 	padding:2px 8px;
 	margin-top:3px;
@@ -200,22 +259,29 @@ input {
 	padding: 2px 8px;
 	margin:5px;
 	width:100%;
+	font-size:30pt;
 }
 .primarybtn {
 	background-color:#666666;
-	border:1px sold #666666;
+	border:1px solid #666666;
 	margin:5px;
 	color: #fff;
 	padding: 5px 8px;
 	text-align:center;
 	width:100%;
+	font-size: 28pt;
+
 }
 .primarybtn:disabled {
-	color:#555555;
+	color:#999999;
 }
 .io {
 	height:120px;
 	padding:10px;
 	text-align:center;
+}
+p {
+	padding: 10px 6px;
+	width:100%;
 }
 </style>

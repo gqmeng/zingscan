@@ -33,12 +33,7 @@ Vue.use(Vuex);
 // create router
 const routes = [
                 { path : '/', component : require('./components/frontpage.vue')	},
-                { path : '/about', component: require('./components/about.vue') },
-                { path : '/datagenerator', component: require('./components/datagenerator.vue') },
-                { path : '/patient/:id', name : 'patient', component : require('./components/patientdetail.vue'), data: function(){
-                	   	console.log("current Patient ID:"+ this.$route.params.id);
-                    }	},
-                { path : '/notification', component: require('./components/notification.vue') },
+                { path : '/about', component: require('./components/about.vue') }
                       	    ];
 
 const router = new VueRouter({
