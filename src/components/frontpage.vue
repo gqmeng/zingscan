@@ -57,6 +57,24 @@
 		</div>
 	</div>
 	<div class='row' v-show='currentstep>=1'>
+		<div class='col-md-2 col-sm-2 col-xs-2'>
+			<span v-if='operation!=""'>{{operation}}</span>
+			<span v-else class='preselect'>Operation</span>
+		</div>
+		<div class='col-md-2 col-sm-2 col-xs-2'>
+			<span v-if='routetype!=""'>{{routetype}}</span>
+			<span v-else class='preselect'>Run</span>
+		</div>
+		<div class='col-md-4 col-sm-4 col-xs-4'>
+			<span v-if='selectedroute!=""'>{{selectedroute}}</span>
+			<span v-else class='preselect'>Route</span>
+		</div>
+		<div class='col-md-4 col-sm-4 col-xs-4'>
+			<span v-if='selectedcustomer!=""'>{{selectedcustomer}}</span>
+			<span v-else class='preselect'>Customer</span>
+		</div>
+	</div>
+	<div class='row' v-show='currentstep==1'>
 		<div class='rowtitle'>
 			<span v-if='currentstep==1'>Operation Selector</span>
 			<span v-else>{{operation}}</span>
@@ -68,20 +86,29 @@
 			</div>
 		</div>
 	</div>
-	<div class='row'  v-show='currentstep>=2 && !isCheckIn'>
+	<div class='row'  v-show='currentstep==2 && !isCheckIn'>
 		<div class='rowtitle'>
 			<span v-if='currentstep==2'>Route Selector</span>
 			<span v-else>ROUTE: {{selectedroute}}</span>
 		</div>
-		<div class='opselectpanel' v-if='!routeselected'>
+		<div class='opselectpanel' v-if='!routeselected' >
+			<div class='row'>
+				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
+				<div class='col-md-10 col-sm-10 col-xs-10' v-if='isCheckIn' >HOME</div>
+				<div class='col-md-5 col-sm-5 col-xs-5' v-if='!isCheckIn' @click='setrun(0)'>DAY</div>
+				<div class='col-md-5 col-sm-5 col-xs-5' v-if='!isCheckIn' @click='setrun(1)'>NIGHT</div>
+				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
+			</div>
+		</div>
+		<div class='opselectpanel' v-if='routetypeselected&&!routeselected'>
 			<div class='row'>
 				<select  v-model='selectedroute'>
-					<option v-for='opt in routelist'v-bind:value="opt">{{ opt}}</option>
+					<option v-for='opt in filteredroutelist'v-bind:value="opt">{{ opt}}</option>
 				</select>
 			</div>
 		</div>
 	</div>
-	<div class='row'  v-show='currentstep>=3 && !isCheckIn'>
+	<div class='row'  v-show='currentstep==3 && !isCheckIn'>
 		<div class='rowtitle'>
 			<span v-if='currentstep==3'>Customer Selector</span>
 			<span v-else>Customer: {{selectedcustomer}}</span>
@@ -89,48 +116,51 @@
 		<div class='opselectpanel' v-if='!customerselected'>
 			<div class='row'>
 				<select  v-model='selectedcustomer'>
-					<option v-for='opt in customerlist'v-bind:value="opt">{{ opt}}</option>
+					<option v-for='opt in filteredcustlist'v-bind:value="opt">{{ opt}}</option>
 				</select>
 			</div>
 		</div>
 	</div>
 	<div class='row'  v-show='currentstep>=4'>
-		<div class='rowtitle'>Scanner
+		<div class='rowtitle'>Scanner	</div>
 
+		<div class='barcodelist'>List
+			<ul>
+				<li v-for='tag in taglist'>{{tag}}</li>
+			</ul>
 		</div>
-		<!-- <div class='scannerscreen'><scanner></scanner></div> -->
-		<div class='barcodelist'>List</div>
 		<div class='button'>btns</div>
+		<div class='scannerscreen'><scanner v-on:barcoderead='readtag'></scanner></div>
 	</div>
 	<div class='settingoverlay'  v-show='false'><div class='rowtitle'>Config</div></div>
 </div>
 </template>
 <script>
 
-// import kogrid from './kogrid.vue';
-// import scanner from "./scanner.vue";
+ import scanner from "./scanner.vue";
 export default {
     name: 'frontpage',
 	data : function() {
 		return {
 			testmode:true,
-			currentstep:0,
+			currentstep:4,
 			serverurl:'http://localhost/zing2',
-			filebase:'/m/mjsonlogin.php',
+			filebase:{'login':'/m/mjsonlogin.php', 'custlist':'/m/customerlist.php'},
 			user:{username:'UserA1',password:'AAAA'},
 			requestbody:'request',
 			responsebody:'response',
 			operation:'',
+			masterCustList:{'cust':[],'route':[]},
 			routelist:['a','b','c','d'],
 			selectedroute:'',
 			customerlist:['1','2','3','4','5'],
 			selectedcustomer:'',
-			taglist:[]
+			taglist:[],
+			routetype:''
 		}
 	},
 	created : function() {
 		var self=this;
-		// this.loadPatientDataIntoStorage();
 		var lastsunday = this.$moment().day(-7);
 		var obj={start:0, end:0, days:7};
 		obj.end=this.$moment().day(6).endOf('day').unix();   //next Saturday
@@ -140,7 +170,6 @@ export default {
 		// this.$store.commit("setcurrentdaterange",obj)
 	},
 	mounted:function(){
-		// this.$store.commit('setScreenname','Patient List')
 	},
 	updated: function() {
 
@@ -170,11 +199,34 @@ export default {
 		isCheckIn:function(){
 			return this.operation=='Check IN'
 		},
+		routetypeselected:function(){
+			return this.routetype!=''
+		},
 		routeselected:function(){
 			return this.selectedroute!=''
 		},
 		customerselected:function(){
 			return this.selectedcustomer!=''
+		},
+		filteredroutelist:function(){
+			var l = []
+			var self=this;
+			this.masterCustList.route.forEach(function(e){
+				if(e.route==self.routetype){
+					l.push(e.routeid)
+				}
+			})
+			return l
+		},
+		filteredcustlist:function(){
+			var l = []
+			var self=this;
+			this.masterCustList.cust.forEach(function(e){
+				if(e.routeid==self.selectedroute){
+					l.push(e.custid)
+				}
+			})
+			return l
 		}
 	},
 	methods : {
@@ -193,7 +245,7 @@ export default {
 			for(var key in data){
 				params.append(key, data[key]);
 			}
-			var url = this.serverurl+this.filebase
+			var url = this.serverurl+this.filebase.login
 			this.$http({
 				method: 'POST',
 				url: url,
@@ -216,21 +268,72 @@ export default {
 			this.user.username=''
 			this.user.password=''
 		},
+		retrieveCustomerList:function(){
+			var self=this
+			self.masterCustList.cust=[]
+			self.masterCustList.route=[]
+			var data ={}
+			data.device ='A'
+			var params = new URLSearchParams();
+			for(var key in data){
+				params.append(key, data[key]);
+			}
+			var url = this.serverurl+this.filebase.custlist
+			this.$http({
+				method: 'POST',
+				url: url,
+				headers: {'Content-type': 'application/x-www-form-urlencoded',
+									'Accept':'application/json'
+								},
+				data:params
+			}) .then(function(response) {
+				var resp = response.data
+				console.log(resp)
+				resp.Cust.forEach(function(e){
+					self.masterCustList.cust.push(e)
+				})
+				resp.ROUTE.forEach(function(e){
+					self.masterCustList.route.push(e)
+				})
+				// self.currentstep++;
+			}) .catch(function(error){
+				self.responsebody=JSON.stringify(error)
+				console.log(error)
+			});
+		},
 		setcheck:function(n){
 			if(n==0) {
 				this.operation='Check OUT'
+				this.retrieveCustomerList()
 				this.currentstep++
 			}
 			if(n==1) {
 				this.operation='Check IN'
+				this.routetype='HOME'
 				this.currentstep=4;
 			}
 			this.selectedcustomer=''
 			this.selectedroute=''
+		},
+		setrun:function(n){
+			if(n==0) {
+				this.routetype='DAY'
+			}
+			if(n==1) {
+				this.routetype='NIGHT'
+			}
+		},
+		readtag:function(data){
+			var tag = data.codeResult.code
+			var index = this.taglist.indexOf(tag)
+			if(index==-1&&tag.length==7){
+				this.taglist.push(tag)
+			}
 		}
+
 	},
 	components:{
-		// scanner
+		 scanner
 	}
 };
 </script>

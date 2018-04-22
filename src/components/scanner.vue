@@ -2,9 +2,9 @@
   <div class="scanner_wrapper">
     <button @click="stop">Stop</button>
     <div ref="quagga" class="camera"/>
-    <pre v-if="data">
+    <!-- <pre v-if="data">
       {{ data }}
-    </pre>
+    </pre> -->
   </div>
 </template>
 
@@ -37,7 +37,9 @@ export default {
       console.log('Quagga started!')
     },
     onDetected(data) {
+      this.$emit('barcoderead', data)
       this.data = data
+      console.log(data)
     },
     stop() {
       Quagga.offDetected(this.onDetected)
@@ -52,7 +54,7 @@ export default {
 
 <style>
 .scanner-wrapper {
-  width: 80vh;
+  width: 40vh;
   border-left: 1px solid grey;
   border-right: 1px solid grey;
 }
