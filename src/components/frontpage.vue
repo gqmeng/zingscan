@@ -1,9 +1,17 @@
 <template>
 <div class='content'>
 	<div class='row'>
-		<div class='rowtitle'>
-			<span v-if='currentstep==0'>Login</span>
-			<span v-else>Logged In As: {{user.username}} </span> <div class='inlinebtn' v-if='isLoggedIn' @click='logout'>LOG OUT</div>
+		<div class='row rowtitle'>
+			<div class='col-xs-4 ' >
+					<div class='inlinebtn float-l' v-if='isLoggedIn' @click='logout'>LOG OUT</div>
+					<span v-else>Login</span>
+			</div>
+			<div class='col-xs-4 txtcenter'>
+				<span v-if='isLoggedIn'> {{user.username}} </span>
+			</div>
+			<div class='col-xs-4 '>
+				<div class='inlinebtn float-r' v-if='isLoggedIn' @click='startover'>Start Over</div>
+			</div>
 		</div>
 		<div class='loginpanel' v-if='currentstep==0'>
 			<div class='row'>
@@ -57,19 +65,19 @@
 		</div>
 	</div>
 	<div class='row' v-show='currentstep>=1'>
-		<div class='col-md-2 col-sm-2 col-xs-2'>
+		<div class='col-xs-2 txtcenter optab' :class='{activetab:operation!=""}'>
 			<span v-if='operation!=""'>{{operation}}</span>
 			<span v-else class='preselect'>Operation</span>
 		</div>
-		<div class='col-md-2 col-sm-2 col-xs-2'>
+		<div class='col-xs-2 txtcenter optab' :class='{activetab:routetype!=""}'>
 			<span v-if='routetype!=""'>{{routetype}}</span>
 			<span v-else class='preselect'>Run</span>
 		</div>
-		<div class='col-md-4 col-sm-4 col-xs-4'>
+		<div class='col-xs-4 txtcenter optab' :class='{activetab:selectedroute!=""}'>
 			<span v-if='selectedroute!=""'>{{selectedroute}}</span>
 			<span v-else class='preselect'>Route</span>
 		</div>
-		<div class='col-md-4 col-sm-4 col-xs-4'>
+		<div class='col-xs-4 txtcenter optab' :class='{activetab:selectedcustomer!=""}'>
 			<span v-if='selectedcustomer!=""'>{{selectedcustomer}}</span>
 			<span v-else class='preselect'>Customer</span>
 		</div>
@@ -88,8 +96,8 @@
 	</div>
 	<div class='row'  v-show='currentstep==2 && !isCheckIn'>
 		<div class='rowtitle'>
-			<span v-if='currentstep==2'>Route Selector</span>
-			<span v-else>ROUTE: {{selectedroute}}</span>
+			<span v-if='currentstep==2'>Run Selector</span>
+			<span v-else>Run: {{routetype}}</span>
 		</div>
 		<div class='opselectpanel' v-if='!routeselected' >
 			<div class='row'>
@@ -124,13 +132,21 @@
 	<div class='row'  v-show='currentstep>=4'>
 		<div class='rowtitle'>Scanner	</div>
 
-		<div class='barcodelist'>List
+		<div class='row' style='height:540px;'>
+			<div class='col-sm-9 col-xs-9'>
+				<scanner v-on:barcoderead='readtag'></scanner>
+			</div>
+			<div class='col-sm-3 col-xs-3' style='height:100%; font-size:120pt;text-align:center;border:1px solid #e7e7e7;'>
+				<span > {{taglist.length}} </span>
+
+			</div>
+		</div>
+		<div class='barcodelist txtcenter'> Tag List 
 			<ul>
 				<li v-for='tag in taglist'>{{tag}}</li>
 			</ul>
 		</div>
 		<div class='button'>btns</div>
-		<div class='scannerscreen'><scanner v-on:barcoderead='readtag'></scanner></div>
 	</div>
 	<div class='settingoverlay'  v-show='false'><div class='rowtitle'>Config</div></div>
 </div>
@@ -143,7 +159,7 @@ export default {
 	data : function() {
 		return {
 			testmode:true,
-			currentstep:4,
+			currentstep:0,
 			serverurl:'http://localhost/zing2',
 			filebase:{'login':'/m/mjsonlogin.php', 'custlist':'/m/customerlist.php'},
 			user:{username:'UserA1',password:'AAAA'},
@@ -230,6 +246,13 @@ export default {
 		}
 	},
 	methods : {
+		startover:function(){
+			this.selectedcustomer=''
+			this.selectedroute=''
+			this.routetype=''
+			this.operation=''
+			this.currentstep =1
+		},
 		enterPressed: function(e){
 				e.preventDefault();
 		},
@@ -246,6 +269,7 @@ export default {
 				params.append(key, data[key]);
 			}
 			var url = this.serverurl+this.filebase.login
+			if(!this.testmode){
 			this.$http({
 				method: 'POST',
 				url: url,
@@ -255,18 +279,28 @@ export default {
 				data:params
 			}) .then(function(response) {
 				self.responsebody=JSON.stringify(response)
+				self.$store.commit('setcurrentuser',self.user.username)
 				console.log(response)
 				self.currentstep++;
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
 			});
+		}else {
+			self.currentstep++;
+			self.$store.commit('setcurrentuser',self.user.username)
+		}
 			this.operation=''
 		},
 		logout:function() {
 			this.currentstep=0;
 			this.user.username=''
 			this.user.password=''
+			this.$store.commit('setcurrentuser',this.user.username)
+			this.selectedcustomer=''
+			this.selectedroute=''
+			this.routetype=''
+			this.operation=''
 		},
 		retrieveCustomerList:function(){
 			var self=this
@@ -344,18 +378,18 @@ export default {
 	padding: 10px;
 }
 .rowtitle {
-	font-size: 20pt;
+	font-size: 40pt;
 	font-weight: 600;
 	background-color:#e3e3e3;
 	padding:5px 15px;
 }
 .inlinebtn {
 	display:inline-block;
-	float:right;
-	font-size:20pt;
+	font-size:30pt;
 	border:1px solid #666666;
 	padding:2px 8px;
-	margin-top:3px;
+	margin:0 auto;
+	margin-top:6px;
 }
 input {
 	border:1px solid #666666;
@@ -375,6 +409,13 @@ input {
 	font-size: 28pt;
 
 }
+.optab {
+	font-size: 20pt;
+	background:#fff;
+}
+.optab.activetab {
+	background:#e3e3e3;
+}
 .primarybtn:disabled {
 	color:#999999;
 }
@@ -386,5 +427,10 @@ input {
 p {
 	padding: 10px 6px;
 	width:100%;
+}
+.barcodelist {
+	font-size:25pt;
+	height:600px;
+	overflow:scroll;
 }
 </style>

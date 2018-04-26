@@ -1,6 +1,6 @@
 <template>
   <div class="scanner_wrapper">
-    <button @click="stop">Stop</button>
+    <!-- <button @click="stop">Stop</button> -->
     <div ref="quagga" class="camera"/>
     <!-- <pre v-if="data">
       {{ data }}
@@ -13,6 +13,7 @@ import Quagga from 'quagga'
 export default {
   data: () => ({ data: null }),
   mounted () {
+    var w = 940
     this.$nextTick(() => {
       Quagga.init({
           inputStream : {
@@ -21,10 +22,13 @@ export default {
           target: this.$refs.quagga
         },
         decoder : {
-          readers : ["code_128_reader", "upc_reader"],
+          readers : ["code_128_reader"],
           debug: {
-            drawBoundingBox: false,
-          }
+            drawBoundingBox: true,
+            showFrequency: false,
+            drawScanline: true,
+            showPattern: false
+ }
         }
       },
       () => this.start())
@@ -39,7 +43,7 @@ export default {
     onDetected(data) {
       this.$emit('barcoderead', data)
       this.data = data
-      console.log(data)
+      console.log(data.codeResult.code+" "+data.codeResult.startInfo.error)
     },
     stop() {
       Quagga.offDetected(this.onDetected)
@@ -54,14 +58,15 @@ export default {
 
 <style>
 .scanner-wrapper {
-  width: 40vh;
+  /* width: 100vh; */
   border-left: 1px solid grey;
   border-right: 1px solid grey;
 }
 .camera {
-  border: 1px solid red;
-  max-height: 160px;
+  border: 1px solid #777777;
+  max-height: 510px;
   display: block;
-
+  margin:0 auto;
+  padding:10px 8px 10px 10px;
 }
 </style>
