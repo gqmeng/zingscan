@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- <navbar></navbar> -->
  	  <router-view></router-view>
   </div>
 </template>
 <script>
-import navbar from './components/navbar.vue';
 
 export default {
   name: 'app1',
@@ -15,9 +13,6 @@ export default {
   created: function () {
     var t = this.$moment().unix()
     // this.$store.commit("settoday", t)
-  },
-  components: {
-    navbar
   },
 	computed:{
 	},

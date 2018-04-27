@@ -89,12 +89,14 @@
 		</div>
 		<div class='opselectpanel' v-if='!opchecked'>
 			<div class='row'>
-				<div class='col-md-6 col-sm-6 col-xs-6 io' @click='setcheck(0)'>Check OUT	</div>
-				<div class='col-md-6 col-sm-6 col-xs-6 io' @click='setcheck(1)'>Check IN	</div>
+				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' @click='setcheck(0)'><div class='m-btn out'>Check OUT</div>	</div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' @click='setcheck(1)'><div class='m-btn in'>Check IN</div>	</div>
+				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
 			</div>
 		</div>
 	</div>
-	<div class='row'  v-show='currentstep==2 && !isCheckIn'>
+	<div class='row'  v-show='currentstep==2'>
 		<div class='rowtitle'>
 			<span v-if='currentstep==2'>Run Selector</span>
 			<span v-else>Run: {{routetype}}</span>
@@ -102,34 +104,40 @@
 		<div class='opselectpanel' v-if='!routeselected' >
 			<div class='row'>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
-				<div class='col-md-10 col-sm-10 col-xs-10' v-if='isCheckIn' >HOME</div>
-				<div class='col-md-5 col-sm-5 col-xs-5' v-if='!isCheckIn' @click='setrun(0)'>DAY</div>
-				<div class='col-md-5 col-sm-5 col-xs-5' v-if='!isCheckIn' @click='setrun(1)'>NIGHT</div>
+				<div class='col-md-10 col-sm-10 col-xs-10 io mediumfont' v-if='isCheckIn' >HOME</div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' v-if='!isCheckIn' @click='setrun(0)'><div class='m-btn day'>DAY</div></div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' v-if='!isCheckIn' @click='setrun(1)'><div class='m-btn night'>NIGHT</div></div>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
 			</div>
 		</div>
+</div>
+<div class='row'  v-show='currentstep==3'>
+	<div class='rowtitle'>
+		<span v-if='currentstep==3'>Route Selector</span>
+		<span v-else>Customer: {{selectedcustomer}}</span>
+	</div>
 		<div class='opselectpanel' v-if='routetypeselected&&!routeselected'>
-			<div class='row'>
-				<select  v-model='selectedroute'>
-					<option v-for='opt in filteredroutelist'v-bind:value="opt">{{ opt}}</option>
+			<div class='row mediumfont'>
+				<select  v-model='selectedroute' style='width:100%;'>
+					<option v-for='opt in filteredroutelist'v-bind:value="opt">{{opt}}</option>
 				</select>
 			</div>
 		</div>
 	</div>
-	<div class='row'  v-show='currentstep==3 && !isCheckIn'>
+	<div class='row'  v-show='currentstep==4 '>
 		<div class='rowtitle'>
 			<span v-if='currentstep==3'>Customer Selector</span>
 			<span v-else>Customer: {{selectedcustomer}}</span>
 		</div>
 		<div class='opselectpanel' v-if='!customerselected'>
-			<div class='row'>
-				<select  v-model='selectedcustomer'>
+			<div class='row mediumfont'>
+				<select  v-model='selectedcustomer' style='width:100%;'>
 					<option v-for='opt in filteredcustlist'v-bind:value="opt">{{ opt}}</option>
 				</select>
 			</div>
 		</div>
 	</div>
-	<div class='row'  v-show='currentstep>=4'>
+	<div class='row'  v-show='currentstep>=5'>
 		<div class='rowtitle'>Scanner	</div>
 
 		<div class='row' style='height:540px;'>
@@ -141,7 +149,7 @@
 
 			</div>
 		</div>
-		<div class='barcodelist txtcenter'> Tag List 
+		<div class='barcodelist txtcenter'> Tag List
 			<ul>
 				<li v-for='tag in taglist'>{{tag}}</li>
 			</ul>
@@ -172,7 +180,8 @@ export default {
 			customerlist:['1','2','3','4','5'],
 			selectedcustomer:'',
 			taglist:[],
-			routetype:''
+			routetype:'',
+			deliveryrun:''
 		}
 	},
 	created : function() {
@@ -192,10 +201,14 @@ export default {
   },
 	watch:{
 		selectedroute:function(){
-			this.currentstep++;
+			if(this.selectedroute!=''){
+				this.currentstep++;
+			}
 		},
 		selectedcustomer:function(){
-			this.currentstep++;
+			if(this.selectedcustomer!=''){
+				this.currentstep++;
+			}
 		}
 	},
 	computed : {
@@ -227,21 +240,33 @@ export default {
 		filteredroutelist:function(){
 			var l = []
 			var self=this;
+			if(this.testmode){
+				this.routelist.forEach(function(e){
+					l.push(e)
+				})
+			}else {
 			this.masterCustList.route.forEach(function(e){
 				if(e.route==self.routetype){
 					l.push(e.routeid)
 				}
 			})
+		}
 			return l
 		},
 		filteredcustlist:function(){
 			var l = []
 			var self=this;
+			if(this.testmode){
+				this.customerlist.forEach(function(e){
+					l.push(e)
+				})
+			}else {
 			this.masterCustList.cust.forEach(function(e){
 				if(e.routeid==self.selectedroute){
 					l.push(e.custid)
 				}
 			})
+		}
 			return l
 		}
 	},
@@ -251,7 +276,7 @@ export default {
 			this.selectedroute=''
 			this.routetype=''
 			this.operation=''
-			this.currentstep =1
+			this.currentstep = 1
 		},
 		enterPressed: function(e){
 				e.preventDefault();
@@ -339,15 +364,18 @@ export default {
 			if(n==0) {
 				this.operation='Check OUT'
 				this.retrieveCustomerList()
+				this.selectedcustomer=''
+				this.selectedroute=''
 				this.currentstep++
 			}
 			if(n==1) {
 				this.operation='Check IN'
 				this.routetype='HOME'
+				this.selectedcustomer='HOME'
+				this.selectedroute='HOME'
 				this.currentstep=4;
 			}
-			this.selectedcustomer=''
-			this.selectedroute=''
+
 		},
 		setrun:function(n){
 			if(n==0) {
@@ -356,7 +384,9 @@ export default {
 			if(n==1) {
 				this.routetype='NIGHT'
 			}
+			this.currentstep=3
 		},
+
 		readtag:function(data){
 			var tag = data.codeResult.code
 			var index = this.taglist.indexOf(tag)
@@ -382,6 +412,33 @@ export default {
 	font-weight: 600;
 	background-color:#e3e3e3;
 	padding:5px 15px;
+}
+.largefont {
+	font-size:50pt;
+}
+.mediumfont {
+	font-size:42pt;
+}
+.smallfont {
+	font-size:36pt;
+}
+.m-btn {
+	border: 1px solid #b7b7b7;
+	border-radius: 3px;
+}
+.m-btn.in{
+	background-color:green;
+	color:#fff;
+}
+.m-btn.night{
+	background-color:grey;
+	color:#fff;
+}
+.m-btn.out{
+	background-color:orange;
+}
+.m-btn.day{
+	background-color:#fff;
 }
 .inlinebtn {
 	display:inline-block;
@@ -420,8 +477,8 @@ input {
 	color:#999999;
 }
 .io {
-	height:120px;
-	padding:10px;
+	height:220px;
+	padding:30px;
 	text-align:center;
 }
 p {

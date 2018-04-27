@@ -24,16 +24,12 @@ Vue.prototype.$eventBus= eventBus
 // install router
 Vue.use(VueRouter);
 
-// install Vee-Validate
-//Vue.use(VeeValidate);
-
 //install vuex
 Vue.use(Vuex);
 
 // create router
 const routes = [
-                { path : '/', component : require('./components/frontpage.vue')	},
-                { path : '/about', component: require('./components/about.vue') }
+                { path : '/', component : require('./components/frontpage.vue')	}
                       	    ];
 
 const router = new VueRouter({
@@ -42,36 +38,6 @@ const router = new VueRouter({
   hashbang : false,
 });
 
-Vue.directive(
-  'click-outside', {
-    bind: function(el, binding, vNode) {
-    if (typeof binding.value !== 'function') {
-        const compName = vNode.context.name
-        let warn = `[Vue-click-outside:] provided expression '${binding.expression}' is not a function, but has to be`
-        if (compName) { warn += `Found in component '${compName}'` }
-
-        console.warn(warn)
-      }
-      // Define Handler and cache it on the element
-      const bubble = binding.modifiers.bubble
-      const handler = (e) => {
-        if (bubble || (!el.contains(e.target) && el !== e.target)) {
-          binding.value(e)
-        }
-      }
-      el.__vueClickOutside__ = handler
-
-      // add Event Listeners
-      document.addEventListener('click', handler)
-    },
-
-    unbind: function(el, binding) {
-      // Remove Event Listeners
-      document.removeEventListener('click', el.__vueClickOutside__)
-      el.__vueClickOutside__ = null
-    }
-  }
-)
 
 var vm = new Vue({
 	router : router,
@@ -80,17 +46,9 @@ var vm = new Vue({
 	data : {},
 	components:{	App: App	},
 	created: function(){
-		var self=this;
-    console.log('Racktrack Web Application');
+    // console.log('Racktrack Web Application');
   	this.$eventBus.$on("return", function(){
 			router.push({ path: '/' });
 		});
-		this.$eventBus.$on("patientSelected", function(id){
-			router.push({ name:'patient' ,params: { id: id}});
-		});
-	  this.$eventBus.$on("patientRemoved", function(obj){
-			router.push({ path: '/' });
-	  });
-
 	}
 	}).$mount('#app');
