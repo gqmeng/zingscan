@@ -10,11 +10,11 @@
 				<span v-if='isLoggedIn'> {{user.username}} </span>
 			</div>
 			<div class='col-xs-4 '>
-				<div class='inlinebtn float-r' v-if='isLoggedIn' @click='startover'>Start Over</div>
+				<div class='inlinebtn float-r' v-if='isLoggedIn' @click='startover'>New Scan</div>
 			</div>
 		</div>
 		<div class='loginpanel' v-if='currentstep==0'>
-			<div class='row'>
+			<div class='row' v-show='debugEnabled'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
 				<label>Server URL</label>
 			</div>
@@ -46,7 +46,7 @@
 				<button class='primarybtn' :disabled='!validuser' @click='loginclick'>LOG IN</button>
 			</div>
 		</div>
-		<!-- <div class='row' v-if='testmode'>
+		<!-- <div class='row' v-if='debugEnabled'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
 					<label>REQUEST</label>
 			</div>
@@ -54,7 +54,7 @@
 				<p>{{requestbody}}</p>
 			</div>
 		</div> -->
-		<div class='row' v-if='testmode'>
+		<div class='row' v-if='debugEnabled'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
 					<label>RESPONSE</label>
 			</div>
@@ -90,8 +90,8 @@
 		<div class='opselectpanel' v-if='!opchecked'>
 			<div class='row'>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
-				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' @click='setcheck(0)'><div class='m-btn out'>Check OUT</div>	</div>
-				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' @click='setcheck(1)'><div class='m-btn in'>Check IN</div>	</div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io-l mediumfont' @click='setcheck(0)'><div class='m-btn out'>Check OUT</div>	</div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io-r mediumfont' @click='setcheck(1)'><div class='m-btn in'>Check IN</div>	</div>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
 			</div>
 		</div>
@@ -105,8 +105,8 @@
 			<div class='row'>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
 				<div class='col-md-10 col-sm-10 col-xs-10 io mediumfont' v-if='isCheckIn' >HOME</div>
-				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' v-if='!isCheckIn' @click='setrun(0)'><div class='m-btn day'>DAY</div></div>
-				<div class='col-md-5 col-sm-5 col-xs-5 io mediumfont' v-if='!isCheckIn' @click='setrun(1)'><div class='m-btn night'>NIGHT</div></div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io-l mediumfont' v-if='!isCheckIn' @click='setrun(0)'><div class='m-btn day'>DAY</div></div>
+				<div class='col-md-5 col-sm-5 col-xs-5 io-r mediumfont' v-if='!isCheckIn' @click='setrun(1)'><div class='m-btn night'>NIGHT</div></div>
 				<div class='col-md-1 col-sm-1 col-xs-1'  ></div>
 			</div>
 		</div>
@@ -119,7 +119,8 @@
 		<div class='opselectpanel' v-if='routetypeselected&&!routeselected'>
 			<div class='row mediumfont'>
 				<select  v-model='selectedroute' style='width:100%;'>
-					<option v-for='opt in filteredroutelist'v-bind:value="opt">{{opt}}</option>
+					<option disabled value="">Please select the route</option>
+					<option v-for='opt in filteredroutelist'v-bind:value="opt.id">{{opt.label}}</option>
 				</select>
 			</div>
 		</div>
@@ -132,6 +133,7 @@
 		<div class='opselectpanel' v-if='!customerselected'>
 			<div class='row mediumfont'>
 				<select  v-model='selectedcustomer' style='width:100%;'>
+						<option disabled value="">Please select the customer</option>
 					<option v-for='opt in filteredcustlist'v-bind:value="opt">{{ opt}}</option>
 				</select>
 			</div>
@@ -151,10 +153,10 @@
 		</div>
 		<div class='barcodelist txtcenter'> Tag List
 			<ul>
-				<li v-for='tag in taglist'>{{tag}}</li>
+				<li v-for='tag in taglist'>{{tag.tagid}}</li>
 			</ul>
 		</div>
-		<div class='button'>btns</div>
+		<div class='m-btn upload' v-show='readyforupload' @click='uploadtaglist'>Upload Barcode List</div>
 	</div>
 	<div class='settingoverlay'  v-show='false'><div class='rowtitle'>Config</div></div>
 </div>
@@ -166,33 +168,30 @@ export default {
     name: 'frontpage',
 	data : function() {
 		return {
-			testmode:true,
+
 			currentstep:0,
-			serverurl:'http://localhost/zing2',
-			filebase:{'login':'/m/mjsonlogin.php', 'custlist':'/m/customerlist.php'},
-			user:{username:'UserA1',password:'AAAA'},
+			filebase:{'login':'/m/mjsonlogin.php', 'custlist':'/m/customerlist.php','upload':'/m/scanlogupload.php'},
+			user:{username:'UserA1',password:'AAAA',userid:'A1'},
 			requestbody:'request',
 			responsebody:'response',
 			operation:'',
 			masterCustList:{'cust':[],'route':[]},
-			routelist:['a','b','c','d'],
+			routelist:[{id:'a',label:"A"},{id:'b',label:"B"},{id:'c',label:"C"},{id:'d',label:"D"}],
 			selectedroute:'',
 			customerlist:['1','2','3','4','5'],
 			selectedcustomer:'',
 			taglist:[],
 			routetype:'',
-			deliveryrun:''
+			deliveryrun:'',
+			scantimestamp:0,
+			scantime:''
 		}
 	},
 	created : function() {
 		var self=this;
-		var lastsunday = this.$moment().day(-7);
-		var obj={start:0, end:0, days:7};
-		obj.end=this.$moment().day(6).endOf('day').unix();   //next Saturday
-		obj.start=this.$moment().day(obj.days-7).startOf('day').unix() //last Sunday
-		console.log("Start at: "+obj.start+"  End at:"+obj.end)
-		console.log("Start at: "+this.$moment.unix(obj.start).format()+"  End at:"+this.$moment.unix(obj.end).format())
-		// this.$store.commit("setcurrentdaterange",obj)
+		this.scantimestamp = this.$moment().unix();
+		this.scantime = this.$moment().format('YYYY-MM-DD HH:MM:SS')
+		console.log("Start at: "+ this.scantimestamp+" "+this.scantime)
 	},
 	mounted:function(){
 	},
@@ -212,6 +211,33 @@ export default {
 		}
 	},
 	computed : {
+		debugEnabled:function(){
+			return this.$store.getters.isDebugging
+		},
+		deviceid:function(){
+      return this.$store.getters.getdeviceid
+    },
+		serverurl:function(){
+				return this.$store.getters.getserverurl
+		},
+		transactionid: function(){
+			var s = this.user.userid
+			s=s+this.deviceid
+			var t = this.scantimestamp +""
+			s=s+t
+			return s
+		},
+		reqbody: function(){
+			var obj={ "TransID":"" , "Scantype" : "" , "custid" : "", "routeid" : "", "Scantime" : "" , "Tags" : [] }
+			obj.TransID = this.transactionid
+			if(this.isCheckIn) {obj.Scantype = 'CK_IN'}
+			else {obj.Scantype = 'CKOUT'}
+			obj.routeid = this.selectedroute
+			obj.custid=this.selectedcustomer
+			obj.Scantime = this.scantime
+			obj.Tags = JSON.parse(JSON.stringify(this.taglist))
+			return obj
+		},
 		cUser: function(){
 			return this.$store.getters.getcurrentuser
 		},
@@ -240,7 +266,7 @@ export default {
 		filteredroutelist:function(){
 			var l = []
 			var self=this;
-			if(this.testmode){
+			if(this.debugEnabled){
 				this.routelist.forEach(function(e){
 					l.push(e)
 				})
@@ -256,7 +282,7 @@ export default {
 		filteredcustlist:function(){
 			var l = []
 			var self=this;
-			if(this.testmode){
+			if(this.debugEnabled){
 				this.customerlist.forEach(function(e){
 					l.push(e)
 				})
@@ -268,6 +294,9 @@ export default {
 			})
 		}
 			return l
+		},
+		readyforupload:function(){
+			return this.taglist.length>0
 		}
 	},
 	methods : {
@@ -277,6 +306,12 @@ export default {
 			this.routetype=''
 			this.operation=''
 			this.currentstep = 1
+			this.$toasted.show("Starting a new scan...")
+			this.scantimestamp = this.$moment().unix();
+			console.log("Start at: "+ this.scantimestamp)
+		},
+		uploadtaglist: function(){
+			console.log(JSON.stringify(this.reqbody))
 		},
 		enterPressed: function(e){
 				e.preventDefault();
@@ -294,7 +329,7 @@ export default {
 				params.append(key, data[key]);
 			}
 			var url = this.serverurl+this.filebase.login
-			if(!this.testmode){
+			if(!this.debugEnabled){
 			this.$http({
 				method: 'POST',
 				url: url,
@@ -321,6 +356,7 @@ export default {
 			this.currentstep=0;
 			this.user.username=''
 			this.user.password=''
+			this.user.userid=""
 			this.$store.commit('setcurrentuser',this.user.username)
 			this.selectedcustomer=''
 			this.selectedroute=''
@@ -388,9 +424,10 @@ export default {
 		},
 
 		readtag:function(data){
-			var tag = data.codeResult.code
-			var index = this.taglist.indexOf(tag)
-			if(index==-1&&tag.length==7){
+			var tag = {}
+			tag.tagid= data.codeResult.code
+			var index = this.taglist.map(function(e){return e.tagid}).indexOf(tag.tagid)
+			if(index==-1&&tag.tagid.length==7){
 				this.taglist.push(tag)
 			}
 		}
@@ -425,20 +462,29 @@ export default {
 .m-btn {
 	border: 1px solid #b7b7b7;
 	border-radius: 3px;
+	height:200px;
+	line-height: 160px;
+	padding:20px 0px;
+		color:#fff;
+		font-size:40pt;
+		text-align:center;
 }
 .m-btn.in{
 	background-color:green;
-	color:#fff;
+
 }
 .m-btn.night{
-	background-color:grey;
-	color:#fff;
+	background-color:#02088e;
+
 }
 .m-btn.out{
-	background-color:orange;
+	background-color:#804c02;
 }
 .m-btn.day{
-	background-color:#fff;
+	background-color:#686ef5;
+}
+.m-btn.upload {
+		background-color:grey;
 }
 .inlinebtn {
 	display:inline-block;
@@ -476,10 +522,16 @@ input {
 .primarybtn:disabled {
 	color:#999999;
 }
-.io {
+.io, .io-l, .io-r {
 	height:220px;
 	padding:30px;
 	text-align:center;
+}
+.io-l {
+	padding:30px 60px 30px 0px;
+}
+.io-r {
+	padding:30px 0px 30px 60px;
 }
 p {
 	padding: 10px 6px;

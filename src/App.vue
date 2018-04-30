@@ -12,13 +12,17 @@ export default {
   },
   created: function () {
     var t = this.$moment().unix()
-    // this.$store.commit("settoday", t)
+    this.$store.commit("settoday", t)
   },
 	computed:{
+    deviceid:function(){
+      return this.$store.getters.getdeviceid
+    }
 	},
 	mounted:function(){
     var self=this;
-    this.$http.get("./static/json/default.json").then( response=> {
+    this.$http.get("./static/json/config.json").then( response=> {
+      console.log(response.data)
       // self.$store.commit('init', response.data)
     }).catch(e=>{
       console.log(e)

@@ -8,6 +8,9 @@ import store from './store';
 import eventBus from './eventBus.js';
 import axios from 'axios';
 import moment from 'moment'
+import Toasted from 'vue-toasted';
+
+Vue.use(Toasted,{position:'bottom-center',theme:'outline',duration:2000})
 
 require('es6-promise').polyfill();
 // Bootstrap 4
