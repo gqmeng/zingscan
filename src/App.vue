@@ -21,9 +21,11 @@ export default {
 	},
 	mounted:function(){
     var self=this;
+    var currentUrl = window.location.href;
+    console.log(currentUrl)
     this.$http.get("./static/json/config.json").then( response=> {
       console.log(response.data)
-      // self.$store.commit('init', response.data)
+      self.$store.commit('init', response.data)
     }).catch(e=>{
       console.log(e)
     });

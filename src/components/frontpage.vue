@@ -120,7 +120,7 @@
 			<div class='row mediumfont'>
 				<select  v-model='selectedroute' style='width:100%;'>
 					<option disabled value="">Please select the route</option>
-					<option v-for='opt in filteredroutelist'v-bind:value="opt.id">{{opt.label}}</option>
+					<option v-for='opt in filteredroutelist'v-bind:value="opt.routeid">{{opt.runname}}</option>
 				</select>
 			</div>
 		</div>
@@ -134,7 +134,7 @@
 			<div class='row mediumfont'>
 				<select  v-model='selectedcustomer' style='width:100%;'>
 						<option disabled value="">Please select the customer</option>
-					<option v-for='opt in filteredcustlist'v-bind:value="opt">{{ opt}}</option>
+					<option v-for='opt in filteredcustlist'v-bind:value="opt.custid">{{ opt.name}}</option>
 				</select>
 			</div>
 		</div>
@@ -273,7 +273,7 @@ export default {
 			}else {
 			this.masterCustList.route.forEach(function(e){
 				if(e.route==self.routetype){
-					l.push(e.routeid)
+					l.push(e)
 				}
 			})
 		}
@@ -289,7 +289,7 @@ export default {
 			}else {
 			this.masterCustList.cust.forEach(function(e){
 				if(e.routeid==self.selectedroute){
-					l.push(e.custid)
+					l.push(e)
 				}
 			})
 		}
@@ -312,6 +312,29 @@ export default {
 		},
 		uploadtaglist: function(){
 			console.log(JSON.stringify(this.reqbody))
+			var url = this.serverurl+this.filebase.upload
+			if(!this.debugEnabled){
+			this.$http({
+				method: 'POST',
+				url: url,
+				headers: {'Content-type': 'application/json',
+									'Accept':'application/json'
+								},
+				data:this.reqbody
+			}) .then(function(response) {
+				self.responsebody=JSON.stringify(response)
+				var success = response.data.success
+				console.log(response)
+				if(success==1){
+					console.log('Success')
+					this.$toasted.show("Upload Successful..")
+					self.currentstep=1
+				}
+			}) .catch(function(error){
+				self.responsebody=JSON.stringify(error)
+				console.log(error)
+			});
+		}
 		},
 		enterPressed: function(e){
 				e.preventDefault();
