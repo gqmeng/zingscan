@@ -1,5 +1,5 @@
 {
-	"serverurl":"http://192.168.3.140:8084/racktrack",
+	"serverurl":"https://192.168.3.140:8084/racktrack",
 	"deviceid":"N",
 	"debugEnabled":false
 	}
