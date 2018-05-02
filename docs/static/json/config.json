@@ -1,5 +1,5 @@
 {
-	"serverurl":"http://localhost/zing2",
+	"serverurl":"https://192.168.3.140:443/racktrack",
 	"deviceid":"N",
 	"debugEnabled":false
 	}
