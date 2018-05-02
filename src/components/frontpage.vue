@@ -65,21 +65,29 @@
 		</div>
 	</div>
 	<div class='row' v-show='currentstep>=1'>
-		<div class='col-xs-2 txtcenter optab' :class='{activetab:operation!=""}'>
-			<span v-if='operation!=""'>{{operation}}</span>
-			<span v-else class='preselect'>Operation</span>
-		</div>
-		<div class='col-xs-2 txtcenter optab' :class='{activetab:routetype!=""}'>
+		<!-- <div class='col-xs-2 txtcenter optab' >
+			<div class='stepind' :class='{active:operation!=""}'>
+				<span v-if='operation!=""'>{{operation}}</span>
+				<span v-else class='preselect'>Operation</span>
+			</div>
+		</div> -->
+		<div class='col-xs-2 txtcenter optab' >
+			<div class='stepind' :class='{active:routetype!="",out:operation=="Check OUT", in:operation=="Check IN"}'>
 			<span v-if='routetype!=""'>{{routetype}}</span>
 			<span v-else class='preselect'>Run</span>
 		</div>
-		<div class='col-xs-4 txtcenter optab' :class='{activetab:selectedroute!=""}'>
-			<span v-if='selectedroute!=""'>{{selectedroute}}</span>
+		</div>
+		<div class='col-xs-5 txtcenter optab' >
+			<div class='stepind' :class='{active:selectedroute!="",out:operation=="Check OUT", in:operation=="Check IN"}'>
+			<span v-if='selectedroute!=""'>{{selectedroutename}}</span>
 			<span v-else class='preselect'>Route</span>
 		</div>
-		<div class='col-xs-4 txtcenter optab' :class='{activetab:selectedcustomer!=""}'>
-			<span v-if='selectedcustomer!=""'>{{selectedcustomer}}</span>
+		</div>
+		<div class='col-xs-5 txtcenter optab' >
+			<div class='stepind' :class='{active:selectedcustomer!="",out:operation=="Check OUT", in:operation=="Check IN"}'>
+			<span v-if='selectedcustomer!=""'>{{selectedcustname}}</span>
 			<span v-else class='preselect'>Customer</span>
+		</div>
 		</div>
 	</div>
 	<div class='row' v-show='currentstep==1'>
@@ -211,6 +219,24 @@ export default {
 		}
 	},
 	computed : {
+		selectedroutename: function(){
+			var ind = this.filteredroutelist.map(function(e){return e.routeid}).indexOf(this.selectedroute)
+			console.log(ind)
+			var t =''
+			if(ind!=-1){
+				t=this.filteredroutelist.map(function(e){return e.runname})[ind]
+			}
+			return t
+		},
+		selectedcustname: function(){
+			var ind = this.filteredcustlist.map(function(e){return e.custid}).indexOf(this.selectedcustomer)
+			console.log(ind)
+			var t =''
+			if(ind!=-1){
+				t=this.filteredcustlist.map(function(e){return e.name})[ind]
+			}
+			return t
+		},
 		debugEnabled:function(){
 			return this.$store.getters.isDebugging
 		},
@@ -306,7 +332,8 @@ export default {
 			this.routetype=''
 			this.operation=''
 			this.currentstep = 1
-			this.$toasted.show("Starting a new scan...")
+			this.$toasted.show("Tag list Reset. Starting a new scan...")
+			this.taglist=[]
 			this.scantimestamp = this.$moment().unix();
 			console.log("Start at: "+ this.scantimestamp)
 		},
@@ -327,15 +354,21 @@ export default {
 				console.log(response)
 				if(success==1){
 					console.log('Success')
-					this.$toasted.show("Upload Successful..")
+					self.$toasted.show("Upload Successful..")
 					self.currentstep=1
+					self.startover()
+				}else {
+					console.log('Success')
+					self.$toasted.show("Upload Error, PLease try again..")
 				}
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
+				self.$toasted.show("Upload Error, PLease try again..")
 			});
 		}
 		},
+
 		enterPressed: function(e){
 				e.preventDefault();
 		},
@@ -368,6 +401,7 @@ export default {
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
+				self.$toasted.show("Cannot Login. Please try again.")
 			});
 		}else {
 			self.currentstep++;
@@ -380,6 +414,7 @@ export default {
 			this.user.username=''
 			this.user.password=''
 			this.user.userid=""
+			this.taglist=[]
 			this.$store.commit('setcurrentuser',this.user.username)
 			this.selectedcustomer=''
 			this.selectedroute=''
@@ -429,9 +464,10 @@ export default {
 			}
 			if(n==1) {
 				this.operation='Check IN'
+				this.retrieveCustomerList()
 				this.routetype='HOME'
-				this.selectedcustomer='HOME'
-				this.selectedroute='HOME'
+				this.selectedcustomer='ZBH1'
+				this.selectedroute='ZHOME'
 				this.currentstep=4;
 			}
 
@@ -565,4 +601,27 @@ p {
 	height:600px;
 	overflow:scroll;
 }
+.stepind {
+	transition: all 0.6s ease;
+	border-radius:35px;
+	background-color: #e5e5e5;
+	margin:5px;
+	border:1px solid #e5e5e5;
+}
+.stepind.active.out {
+	border-radius:0;
+	background-color: #804c02;
+}
+.stepind.active.in {
+	border-radius:0;
+	background-color: green;
+}
+.stepind span {
+	color:#b3b3b3;
+	transition:color 0.6s ease;
+}
+.stepind.active span {
+	color:#fff;
+}
+
 </style>
