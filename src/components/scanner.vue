@@ -63,7 +63,7 @@ export default {
   border-right: 1px solid grey;
 }
 .camera {
-  border: 1px solid #777777;
+  border: 1px solid #f3f3f3;
   max-height: 510px;
   display: block;
   margin:0 auto;

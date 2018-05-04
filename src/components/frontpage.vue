@@ -154,7 +154,7 @@
 			<div class='col-sm-9 col-xs-9'>
 				<scanner v-on:barcoderead='readtag'></scanner>
 			</div>
-			<div class='col-sm-3 col-xs-3' style='height:100%; font-size:120pt;text-align:center;border:1px solid #e7e7e7;'>
+			<div class='col-sm-3 col-xs-3' style='height:100%; font-size:120pt;text-align:center;'>
 				<span > {{taglist.length}} </span>
 
 			</div>
@@ -245,6 +245,9 @@ export default {
     },
 		serverurl:function(){
 				return this.$store.getters.getserverurl
+		},
+		tagprefix:function(){
+			return this.$store.getters.gettagprefix
 		},
 		transactionid: function(){
 			var s = this.user.userid
@@ -338,6 +341,7 @@ export default {
 			console.log("Start at: "+ this.scantimestamp)
 		},
 		uploadtaglist: function(){
+			var self=this
 			console.log(JSON.stringify(this.reqbody))
 			var url = this.serverurl+this.filebase.upload
 			if(!this.debugEnabled){
@@ -350,7 +354,7 @@ export default {
 				data:this.reqbody
 			}) .then(function(response) {
 				self.responsebody=JSON.stringify(response)
-				var success = response.data.success
+				var success = response.data.Success
 				console.log(response)
 				if(success==1){
 					console.log('Success')
@@ -358,7 +362,7 @@ export default {
 					self.currentstep=1
 					self.startover()
 				}else {
-					console.log('Success')
+					console.log('Error')
 					self.$toasted.show("Upload Error, PLease try again..")
 				}
 			}) .catch(function(error){
@@ -421,6 +425,7 @@ export default {
 			this.routetype=''
 			this.operation=''
 		},
+
 		retrieveCustomerList:function(){
 			var self=this
 			self.masterCustList.cust=[]
@@ -485,10 +490,23 @@ export default {
 		readtag:function(data){
 			var tag = {}
 			tag.tagid= data.codeResult.code
-			var index = this.taglist.map(function(e){return e.tagid}).indexOf(tag.tagid)
-			if(index==-1&&tag.tagid.length==7){
+			if(this.validatetag(tag.tagid)){
 				this.taglist.push(tag)
 			}
+		},
+		validatetag:function(id){
+			var b = true;
+			b = b && (id.length==7)
+			var prefixcheck = false
+			if(this.tagprefix.length>0){
+				this.tagprefix.forEach(function(e){
+					prefixcheck = prefixcheck | id.substring(0,1)== e
+				})
+			}
+			b= b && prefixcheck
+			var duplicatecheck = (this.taglist.map(function(e){return e.tagid}).indexOf(id)==-1)
+			b=b && duplicatecheck
+			return b
 		}
 
 	},
@@ -572,8 +590,9 @@ input {
 
 }
 .optab {
-	font-size: 20pt;
+	font-size: 30px;
 	background:#fff;
+	padding:0px;
 }
 .optab.activetab {
 	background:#e3e3e3;
@@ -597,15 +616,22 @@ p {
 	width:100%;
 }
 .barcodelist {
-	font-size:25pt;
+	font-size:40pt;
 	height:600px;
-	overflow:scroll;
+	overflow:auto;
+	border:1px solid #b3b3b3;
+	box-shadow: 2px 2px #e3e3e3;
 }
+.barcodelist>ul>li {
+	background-color:#fff;
+}
+
+.barcodelist>ul>:nth-child(odd) { background-color: #eee; }
 .stepind {
 	transition: all 0.6s ease;
 	border-radius:35px;
 	background-color: #e5e5e5;
-	margin:5px;
+	margin:0px;
 	border:1px solid #e5e5e5;
 }
 .stepind.active.out {

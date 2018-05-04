@@ -37,6 +37,7 @@ const store = new Vuex.Store({
       state.serverurl=state.init.serverurl;
       state.deviceid=state.init.deviceid;
       state.debugEnabled=state.init.debugEnabled;
+      state.tagprefix=state.init.tagprefix;
       window.dispatchEvent(new Event('reload'));
     }
   },
@@ -53,7 +54,9 @@ const store = new Vuex.Store({
     gettoday:state=>{
       return state.today
     },
-
+    gettagprefix: state=> {
+          return state.tagprefix
+        },
     getserverurl: state=> {
       return state.serverurl
     },
