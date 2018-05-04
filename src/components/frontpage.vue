@@ -358,17 +358,19 @@ export default {
 				console.log(response)
 				if(success==1){
 					console.log('Success')
-					self.$toasted.show("Upload Successful..")
-					self.currentstep=1
-					self.startover()
+					self.$toasted.success("Upload Successful..")
+					setTimeout(function(){
+						self.currentstep=1
+						self.startover()
+					},2000)
 				}else {
 					console.log('Error')
-					self.$toasted.show("Upload Error, PLease try again..")
+					self.$toasted.error("Upload Error, PLease try again..")
 				}
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
-				self.$toasted.show("Upload Error, PLease try again..")
+				self.$toasted.error("Upload Error, PLease try again..")
 			});
 		}
 		},
@@ -405,7 +407,7 @@ export default {
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
-				self.$toasted.show("Cannot Login. Please try again.")
+				self.$toasted.error("Cannot Login. Please try again.")
 			});
 		}else {
 			self.currentstep++;

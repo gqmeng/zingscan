@@ -45,4 +45,7 @@ export default {
   color: #777;
   margin-top: 0px;
 }
+.toasted.outline.toastclass{
+	font-size:18px;
+}
 </style>
