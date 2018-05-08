@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-
 import VuexPersistence from 'vuex-persist'
 
 Vue.use(Vuex)
@@ -23,7 +22,8 @@ const store = new Vuex.Store({
       deviceid:'',
       currentdaterange:{starttime:0,endtime:0,days:7},
       today:0,
-      currentuser:''
+      currentuser:'',
+      mockserver:false,
     },
   mutations: {
     settoday(state,timestamp){
@@ -38,15 +38,13 @@ const store = new Vuex.Store({
       state.deviceid=state.init.deviceid;
       state.debugEnabled=state.init.debugEnabled;
       state.tagprefix=state.init.tagprefix;
+      state.mockserver=state.init.mockServer;
       window.dispatchEvent(new Event('reload'));
     }
   },
   getters: {
     getdeviceid:state=>{
       return state.deviceid
-    },
-    getScreenname:state=>{
-      return state.screenname
     },
     getcurrentuser:state=>{
       return state.currentuser
@@ -57,6 +55,9 @@ const store = new Vuex.Store({
     gettagprefix: state=> {
           return state.tagprefix
         },
+        getmockserver: state=> {
+              return state.mockserver
+            },
     getserverurl: state=> {
       return state.serverurl
     },
@@ -83,4 +84,3 @@ const initialStateCopy = JSON.parse(JSON.stringify(store.state))
 export function resetState () {
   store.replaceState(JSON.parse(JSON.stringify(initialStateCopy)))
 }
-// export default store

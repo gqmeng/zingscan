@@ -2,5 +2,6 @@
 	"serverurl":"http://localhost/zing2",
 	"deviceid":"N",
 	"debugEnabled":false,
-	"tagprefix":["G","R"]
+	"tagprefix":["G","R"],
+	"mockServer":false
 	}
