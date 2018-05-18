@@ -88,7 +88,8 @@ export default {
 }
 .camera {
   border: 1px solid #f3f3f3;
-  max-height: 510px;
+  max-height: 640px;
+  min-height: 640px;
   display: block;
   margin:0 auto;
   padding:0;

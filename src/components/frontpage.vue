@@ -14,14 +14,14 @@
 			</div>
 		</div>
 		<div class='loginpanel' v-if='currentstep==0'>
-			<div class='row' v-show='debugEnabled'>
+			<!-- <div class='row' v-show='debugEnabled'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
 				<label>Server URL</label>
 			</div>
 			<div class='col-md-8 col-sm-8 col-xs-8'>
 				<input type='text' v-model='serverurl' placeholder='Please Enter server url'></input>
 			</div>
-		</div>
+		</div> -->
 			<div class='row'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
 				<label>USERNAME</label>
@@ -43,8 +43,13 @@
 
 			</div>
 			<div class='col-md-8 col-sm-8 col-xs-8'>
-				<button class='primarybtn' :disabled='!validuser' @click='loginclick'>LOG IN</button>
-			</div>
+				<div class='btnContent'>
+					<transition name='fade' mode='out-in'>
+						<button key='0' class='primarybtn' :disabled='!validuser' @click='loginclick' v-if='loginstatus.ready'>Log In</button>
+						<!-- <div key='1' class='saving ol-processing login pad-t-15' v-if='loginstatus.processing'>Processing <span>.</span><span>.</span><span>.</span></div> -->
+						</transition>
+					</div>
+				</div>
 		</div>
 		<!-- <div class='row' v-if='debugEnabled'>
 			<div class='col-md-4 col-sm-4 col-xs-4'>
@@ -150,7 +155,7 @@
 	<div class='row'  v-show='currentstep>=5'>
 		<div class='rowtitle'>Scanner	</div>
 
-		<div class='row' style='height:540px;'>
+		<div class='row' style='height:650px;'>
 			<div class='col-sm-9 col-xs-9'>
 				<scanner v-on:barcoderead='readtag'></scanner>
 			</div>
@@ -164,7 +169,13 @@
 				<li v-for='tag in taglist'>{{tag.tagid}}</li>
 			</ul>
 		</div>
-		<div class='m-btn upload' v-show='readyforupload' @click='uploadtaglist'>Upload Barcode List</div>
+		<div class=' upload' v-show='readyforupload'>
+			<transition name='fade' mode='out-in'>
+				<button key='0' class='m-btn upload' @click='uploadtaglist' v-if='uploadstatus.ready'>Upload Barcode List</button>
+				<!-- <div key='1' class='saving ol-processing login pad-t-15' v-if='uploadstatus.processing'>Processing <span>.</span><span>.</span><span>.</span></div> -->
+				</transition>
+			</div>
+		<!-- <div class='m-btn upload' v-show='readyforupload' @click='uploadtaglist'>Upload Barcode List</div> -->
 	</div>
 	<div class='settingoverlay'  v-show='false'><div class='rowtitle'>Config</div></div>
 </div>
@@ -190,8 +201,7 @@ export default {
     name: 'frontpage',
 	data : function() {
 		return {
-
-			currentstep:5,
+			currentstep:0,
 			filebase:{'login':'/m/mjsonlogin.php', 'custlist':'/m/customerlist.php','upload':'/m/scanlogupload.php'},
 			user:{username:'UserA1',password:'AAAA',userid:'A1'},
 			requestbody:'request',
@@ -206,7 +216,10 @@ export default {
 			routetype:'',
 			deliveryrun:'',
 			scantimestamp:0,
-			scantime:''
+			scantime:'',
+			loginstatus:{'ready':true,'processing':false,'success':false,'error':false},
+			uploadstatus:{'ready':true,'processing':false,'success':false,'error':false}
+
 		}
 	},
 	created : function() {
@@ -360,7 +373,7 @@ export default {
 			this.routetype=''
 			this.operation=''
 			this.currentstep = 1
-			this.$toasted.show("Tag list Reset. Starting a new scan...")
+			this.$toasted.show("Starting a new scan...")
 			this.taglist=[]
 			this.scantimestamp = this.$moment().unix();
 			console.log("Start at: "+ this.scantimestamp)
@@ -370,6 +383,7 @@ export default {
 			console.log(JSON.stringify(this.reqbody))
 			var url = this.serverurl+this.filebase.upload
 			if(!this.debugEnabled){
+				self.uploadstatus={'ready':false,'processing':true,'success':false,'error':false}
 			this.$http({
 				method: 'POST',
 				url: url,
@@ -386,16 +400,19 @@ export default {
 					self.$toasted.success("Upload Successful..")
 					setTimeout(function(){
 						self.currentstep=1
+						self.uploadstatus={'ready':true,'processing':false,'success':false,'error':false}
 						self.startover()
 					},2000)
 				}else {
 					console.log('Error')
-					self.$toasted.error("Upload Error, PLease try again..")
+					self.$toasted.error("Server Error. Please try again.")
+					self.uploadstatus={'ready':true,'processing':false,'success':false,'error':false}
 				}
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
-				self.$toasted.error("Upload Error, PLease try again..")
+				self.$toasted.error("Connection Error. Please try again.")
+				self.uploadstatus={'ready':true,'processing':false,'success':false,'error':false}
 			});
 		}
 		},
@@ -417,6 +434,7 @@ export default {
 			}
 			var url = this.serverurl+this.filebase.login
 			if(!this.mockserver){
+				self.loginstatus={'ready':false,'processing':true,'success':false,'error':false}
 			this.$http({
 				method: 'POST',
 				url: url,
@@ -426,13 +444,19 @@ export default {
 				data:params
 			}) .then(function(response) {
 				self.responsebody=JSON.stringify(response)
-				self.$store.commit('setcurrentuser',self.user.username)
 				console.log(response)
-				self.currentstep++;
+				if(response.data.Success!=1){
+					self.$toasted.error("Invalid Username/Password.")
+				}else {
+					self.$store.commit('setcurrentuser',self.user.username)
+					self.currentstep++;
+				}
+				self.loginstatus={'ready':true,'processing':false,'success':false,'error':false}
 			}) .catch(function(error){
 				self.responsebody=JSON.stringify(error)
 				console.log(error)
-				self.$toasted.error("Cannot Login. Please try again.")
+				self.$toasted.error("Connection Error.")
+				self.loginstatus={'ready':true,'processing':false,'success':false,'error':false}
 			});
 		}else {
 			self.currentstep++;
@@ -451,6 +475,7 @@ export default {
 			this.selectedroute=''
 			this.routetype=''
 			this.operation=''
+			this.loginstatus={'ready':true,'processing':false,'success':false,'error':false}
 		},
 
 		retrieveCustomerList:function(){
@@ -590,6 +615,7 @@ export default {
 }
 .m-btn.upload {
 		background-color:grey;
+		width:100%;
 }
 .inlinebtn {
 	display:inline-block;
@@ -677,5 +703,14 @@ p {
 .stepind.active span {
 	color:#fff;
 }
-
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.5s
+}
+.fade-enter,
+.fade-leave-to
+/* .fade-leave-active in <2.1.8 */
+{
+  opacity: 0
+}
 </style>

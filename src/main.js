@@ -10,7 +10,7 @@ import axios from 'axios';
 import moment from 'moment'
 import Toasted from 'vue-toasted';
 
-Vue.use(Toasted,{position:'bottom-center',theme:'outline',duration:1500,className:'toastclass'})
+Vue.use(Toasted,{position:'bottom-center',theme:'outline',duration:1800,className:'toastclass'})
 
 require('es6-promise').polyfill();
 // Bootstrap 4
