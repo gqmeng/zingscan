@@ -1,5 +1,5 @@
 {
-	"serverurl":"http://localhost/zing2",
+	"serverurl":"https://flexidev.zingermans.com/racktrack",
 	"deviceid":"N",
 	"debugEnabled":false,
 	"tagprefix":["G","R"],
